@@ -1,1 +1,1 @@
-export const NEXT_API_URL = 'https://dashboard.jwisnetwork.com';
+export const NEXT_API_URL = 'https://dashboard-staging.jwisnetwork.com';

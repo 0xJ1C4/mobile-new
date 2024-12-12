@@ -13,7 +13,7 @@ import { getReceiptContent } from "@/helper/receipt";
 import LoadingIndicator from "../ui/LoadingIndicator";
 import { useRouter } from "expo-router";
 import { useReceipt } from "@/provider/ReceiptProvider";
-import { ReceiptData } from "@/constants/types";
+import { uriToBlob } from "@/helper/receipt";
 
 import RCOverlay from "../ui/ReceiptOverLay";
 
@@ -80,8 +80,12 @@ export default function CameraScreen() {
   async function takePicture() {
     if (cameraRef.current) {
       const currentPhoto = await cameraRef.current.takePictureAsync(options);
+      const blob = await uriToBlob(currentPhoto?.uri || "");
       setIsLoading(true);
       const content = await getReceiptContent(currentPhoto?.base64 || "");
+
+      const file = new File([blob], "photo.jpg", { type: "image/jpeg" });
+
       setIsLoading(false);
 
       if (content) {
@@ -94,6 +98,7 @@ export default function CameraScreen() {
           })),
           total: content?.message?.total.toString(),
           image: currentPhoto?.base64,
+          imageFile: file,
         };
 
         setReceiptData(transformedData);

@@ -15,7 +15,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { SelectList } from "react-native-dropdown-select-list";
 import { useRouter } from "expo-router";
 import { useReceipt } from "@/provider/ReceiptProvider";
-import { saveReceiptContent } from "@/helper/receipt";
+import { saveReceiptContent, uploadImageReceipt } from "@/helper/receipt";
 import LoadingIndicator from "../ui/LoadingIndicator";
 
 export default function EditReceipt() {
@@ -248,24 +248,34 @@ export default function EditReceipt() {
               style={styles.saveButton}
               onPress={async () => {
                 try {
-                  console.log(receiptData.date);
-                  const transformedData = {
-                    ...receiptData,
-                    items: receiptData.items.map((item: any) => ({
-                      ...item,
-                      unit_price: Number(item.unit_price),
-                      amount: Number(item.amount),
-                    })),
-                    total: Number(receiptData.total),
-                    receipt_type: selectedType,
-                    date: new Date(receiptData.date)
-                      .toISOString()
-                      .split("T")[0],
-                  };
-                  setIsLoading(true);
-                  await saveReceiptContent(transformedData);
-                  setIsLoading(false);
-                  router.dismiss();
+                  const uploadImage = await uploadImageReceipt(
+                    receiptData.imageFile
+                  );
+
+                  if (uploadImage?.ok) {
+                    const uploadedImage = await uploadImage.json();
+                    const uuid = uploadedImage?.id;
+
+                    const transformedData = {
+                      ...receiptData,
+                      image: "",
+                      items: receiptData.items.map((item: any) => ({
+                        ...item,
+                        unit_price: Number(item.unit_price),
+                        amount: Number(item.amount),
+                      })),
+                      total: Number(receiptData.total),
+                      receipt_type: selectedType,
+                      date: new Date(receiptData.date)
+                        .toISOString()
+                        .split("T")[0],
+                      image_uuid: uuid,
+                    };
+                    setIsLoading(true);
+                    await saveReceiptContent(transformedData);
+                    setIsLoading(false);
+                    router.dismiss();
+                  }
                 } catch (error) {
                   Alert.alert("An Error occured");
                 }

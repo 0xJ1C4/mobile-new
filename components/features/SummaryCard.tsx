@@ -47,13 +47,13 @@ export default function SummaryCards() {
   return (
     <View>
       {isLoading ? (
-        <>
+        <View>
           <MetricCardSkeleton />
           <MetricCardSkeleton />
           <MetricCardSkeleton />
-        </>
+        </View>
       ) : (
-        <>
+        <View>
           <View>
             <MetricCard
               type="sales"
@@ -92,7 +92,7 @@ export default function SummaryCards() {
               }
             />
           </View>
-        </>
+        </View>
       )}
     </View>
   );
