@@ -27,6 +27,7 @@ export type ReceiptItem = {
   };
   
 export type ReceiptData = {
+    receipt_category: any
     receipt_number: string;
     date: Date;
     delivered_by: string;

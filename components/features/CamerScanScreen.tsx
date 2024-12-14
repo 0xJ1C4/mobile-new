@@ -71,7 +71,7 @@ export default function CameraScreen() {
     setType((current: string) => (current === "back" ? "front" : "back"));
   }
   let options = {
-    quality: 0,
+    quality: 0.5,
     base64: true,
     exif: false,
     height: 1000,
