@@ -4,16 +4,31 @@ import {
   useCameraPermissions,
   BarcodeScanningResult,
 } from "expo-camera";
-import { useState, useRef } from "react";
-import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  ActivityIndicator,
+  Button,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { saveSessionFromQr, getUser } from "@/helper/session";
 import Overlay from "@/components/ui/qrOverlay";
 import { en, registerTranslation } from "react-native-paper-dates";
+import * as SplashScreen from "expo-splash-screen";
+
+SplashScreen.preventAutoHideAsync();
 
 registerTranslation("en", en);
 
+SplashScreen.setOptions({
+  duration: 1000,
+  fade: true,
+});
+
 export default function LoginScreen() {
+  const [appIsReady, setAppIsReady] = useState(false);
   const [permission, requestPermission] = useCameraPermissions();
 
   const router = useRouter();
@@ -21,48 +36,60 @@ export default function LoginScreen() {
   const [scanned, setScanned] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    async function prepare() {
+      try {
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+
+    prepare();
+  }, []);
+
+  const onLayoutRootView = useCallback(() => {
+    if (appIsReady) {
+      SplashScreen.hide();
+    }
+  }, [appIsReady]);
+
+  if (!appIsReady) {
+    return null;
+  }
+
   if (!permission) {
     return <View />;
   }
 
-  /**
-  router.push({
-    pathname: "/(edit)/edit-transaction",
-    params: {
-      type: "receipt",
-      id: 123,
-      receipt_number: "0056",
-      receipt_type: "Sales",
-      delivered_by: "CDO",
-      delivered_to: "Lapasan",
-      address: "Cagayan De Oro",
-      total: 1000,
-      date: "2024-04-04",
-    },
-  });
-   */
-
   const handleBarCodeScanned = async (result: BarcodeScanningResult) => {
-    setIsLoading(false);
     const { data } = result;
     if (data && !qrLock.current) {
       qrLock.current = true;
       try {
+        setIsLoading(true);
         await saveSessionFromQr(data);
+
         const user = await getUser();
-        setScanned(false);
-        setIsLoading(false);
-        router.replace("/(tabs)");
+        if (user) {
+          setScanned(false);
+          setIsLoading(false);
+          router.replace("/(tabs)");
+        }
+        return router.reload();
       } catch (error) {
+        qrLock.current = false;
         setScanned(false);
         setIsLoading(false);
+        router.reload();
       }
     }
   };
 
   if (!permission.granted) {
     return (
-      <View style={styles.container}>
+      <View style={styles.container} onLayout={onLayoutRootView}>
         <Text style={styles.message}>
           We need your permission to show the camera
         </Text>
@@ -71,8 +98,16 @@ export default function LoginScreen() {
     );
   }
 
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size={"small"} />
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={onLayoutRootView}>
       <CameraView
         style={styles.camera}
         facing="back"
