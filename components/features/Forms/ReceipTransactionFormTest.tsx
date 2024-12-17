@@ -28,6 +28,8 @@ const validationSchema = Yup.object().shape({
   address: Yup.string().required("Address is required"),
   receipt_type: Yup.string().required("Receipt type is required"),
   total: Yup.string().required("Total is required"),
+  sales_category: Yup.number().nullable(),
+  expense_category: Yup.number().nullable(),
   items: Yup.array()
     .of(
       Yup.object().shape({
@@ -49,6 +51,29 @@ type Category = {
   id: number;
   name: string;
   description: string;
+};
+
+type Receipt = {
+  id: number;
+  date: string;
+  delivered_to: string;
+  delivered_by: string;
+  address: string;
+  receipt_number: string;
+  receipt_type: string;
+  sales_category: number;
+  expense_category: number | null;
+  total: number;
+  image_uuid: string;
+  createAt: string;
+  updateAt: string;
+  items: {
+    id: number;
+    description: string;
+    unit_price: number;
+    amount: string;
+    receipt: number;
+  }[];
 };
 
 export default function ReceiptTransactionFormTest() {
@@ -120,7 +145,7 @@ export default function ReceiptTransactionFormTest() {
   };
 
   // getData from the server using ID
-  const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
+  const [receiptData, setReceiptData] = useState<Receipt | null>(null);
 
   useEffect(() => {
     const fetchReceipt = async () => {
@@ -143,6 +168,23 @@ export default function ReceiptTransactionFormTest() {
     );
   }
 
+  const defaultOption =
+    receiptData.sales_category && salesCategory
+      ? {
+          key: receiptData.sales_category.toString(),
+          value: salesCategory.find(
+            (item) => item.id === receiptData.sales_category
+          )?.name,
+        }
+      : receiptData.expense_category && expenseCategory
+      ? {
+          key: receiptData.expense_category.toString(),
+          value: expenseCategory.find(
+            (item) => item.id === receiptData.expense_category
+          )?.name,
+        }
+      : undefined;
+
   return (
     <SafeAreaView style={styles.container}>
       <Formik
@@ -156,7 +198,8 @@ export default function ReceiptTransactionFormTest() {
           date: initialDate,
           items: receiptData?.items || [],
           receipt_type: receiptData?.receipt_type || "",
-          receipt_category: receiptData?.receipt_category || "",
+          sales_category: receiptData.sales_category,
+          expense_category: receiptData.expense_category,
         }}
         validationSchema={validationSchema}
         onSubmit={handleSubmitForm}
@@ -233,14 +276,7 @@ export default function ReceiptTransactionFormTest() {
                           })) || []
                     }
                     save="key"
-                    defaultOption={
-                      values.receipt_category
-                        ? {
-                            key: values.receipt_category,
-                            value: values.receipt_category,
-                          }
-                        : undefined
-                    }
+                    defaultOption={defaultOption}
                     placeholder="Select Receipt Category"
                   />
                 </View>
