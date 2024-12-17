@@ -9,6 +9,10 @@ import {
 } from "react-native";
 import { TextInput, HelperText, Title } from "react-native-paper";
 import { useRouter } from "expo-router";
+import { signInUser } from "@/helper/user";
+import { SafeAreaView } from "react-native-safe-area-context";
+import LoadingIndicator from "./ui/LoadingIndicator";
+import { saveSessionFromQr } from "@/helper/session";
 
 type RootStackParamList = {
   Login: undefined;
@@ -33,6 +37,7 @@ export default function LoginForm() {
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [animation] = useState(new Animated.Value(1));
+  const [loading, setLoading] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
@@ -55,18 +60,26 @@ export default function LoginForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      // Form is valid, proceed with login
-      console.log("Login attempt with:", formData);
-      // Add your login logic here
+      setLoading(true);
+      const user = await signInUser({
+        email: formData.email,
+        password: formData.password,
+      });
+      setLoading(false);
+      if (user) {
+        await saveSessionFromQr(user);
+
+        router.push("/(tabs)");
+      }
     } else {
       console.log("Form has errors");
     }
   };
 
   const handleQRCodeNavigation = () => {
-    router.replace("/");
+    router.push("/");
   };
 
   const handlePressIn = () => {
@@ -83,69 +96,78 @@ export default function LoginForm() {
     }).start();
   };
 
+  if (loading) {
+    return <LoadingIndicator />;
+  }
+
   return (
-    <View style={styles.container}>
-      <Title style={styles.title}>Log In</Title>
-      <TextInput
-        label="Email"
-        value={formData.email}
-        onChangeText={(text) => setFormData({ ...formData, email: text })}
-        mode="outlined"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        error={!!errors.email}
-      />
-      <HelperText type="error" visible={!!errors.email}>
-        {errors.email}
-      </HelperText>
-      <TextInput
-        label="Password"
-        value={formData.password}
-        onChangeText={(text) => setFormData({ ...formData, password: text })}
-        mode="outlined"
-        secureTextEntry
-        error={!!errors.password}
-      />
-      <HelperText type="error" visible={!!errors.password}>
-        {errors.password}
-      </HelperText>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.formContainer}>
+        <Title style={styles.title}>Log In</Title>
 
-      <View style={styles.qrCodeContainer}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.qrCodeButton,
-            pressed && styles.qrCodeButtonPressed,
-          ]}
-          onPress={handleQRCodeNavigation}
+        <TextInput
+          label="Email"
+          value={formData.email}
+          onChangeText={(text) => setFormData({ ...formData, email: text })}
+          mode="outlined"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          error={!!errors.email}
+        />
+        <HelperText type="error" visible={!!errors.email}>
+          {errors.email}
+        </HelperText>
+        <TextInput
+          label="Password"
+          value={formData.password}
+          onChangeText={(text) => setFormData({ ...formData, password: text })}
+          mode="outlined"
+          secureTextEntry
+          error={!!errors.password}
+        />
+        <HelperText type="error" visible={!!errors.password}>
+          {errors.password}
+        </HelperText>
+
+        <View style={styles.qrCodeContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.qrCodeButton,
+              pressed && styles.qrCodeButtonPressed,
+            ]}
+            onPress={handleQRCodeNavigation}
+          >
+            <Text style={styles.qrCodeButtonText}>Connect with QR Code</Text>
+          </Pressable>
+        </View>
+
+        <TouchableWithoutFeedback
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          onPress={handleSubmit}
         >
-          <Text style={styles.qrCodeButtonText}>Connect with QR Code</Text>
-        </Pressable>
+          <Animated.View
+            style={[
+              styles.button,
+              {
+                transform: [{ scale: animation }],
+              },
+            ]}
+          >
+            <Text style={styles.buttonText}>Log In</Text>
+          </Animated.View>
+        </TouchableWithoutFeedback>
       </View>
-
-      <TouchableWithoutFeedback
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={handleSubmit}
-      >
-        <Animated.View
-          style={[
-            styles.button,
-            {
-              transform: [{ scale: animation }],
-            },
-          ]}
-        >
-          <Text style={styles.buttonText}>Log In</Text>
-        </Animated.View>
-      </TouchableWithoutFeedback>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    flex: 1,
+    backgroundColor: "white",
   },
+
   title: {
     fontSize: 24,
     marginBottom: 20,
@@ -184,5 +206,10 @@ const styles = StyleSheet.create({
   qrCodeButtonText: {
     color: "white",
     fontWeight: "bold",
+  },
+  formContainer: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: "white",
   },
 });

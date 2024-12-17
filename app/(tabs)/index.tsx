@@ -13,6 +13,7 @@ import { useRouter } from "expo-router";
 import { Text } from "react-native-paper";
 import Chart from "@/components/features/SalesExpensePieChart";
 import ReceiptTable from "@/components/features/ReceiptTable";
+import LogOutButton from "@/components/features/LogOutButton";
 
 export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
@@ -71,6 +72,10 @@ export default function HomeScreen() {
               Recent Transactions ( With Receipt )
             </Text>
             <ReceiptTable />
+          </View>
+
+          <View style={{ alignItems: "center" }}>
+            <LogOutButton />
           </View>
         </ScrollView>
       )}
