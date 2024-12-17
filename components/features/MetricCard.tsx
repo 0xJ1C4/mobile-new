@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Dimensions, Text } from "react-native";
 import { Image } from "react-native";
+import { TrendingUpIcon, TrendingDownIcon } from "lucide-react-native";
 
 interface MetricCardProps {
   title: string;
@@ -33,10 +34,14 @@ export default function MetricCard({
           <Text
             style={[
               styles.change,
-              change >= 0 ? styles.greenText : styles.redText,
+              change > 0
+                ? styles.greenText
+                : change < 0
+                ? styles.redText
+                : styles.grayText,
             ]}
           >
-            {change >= 0 ? "⬈ " : "⬊"}
+            {change > 0 ? "↑ " : change < 0 ? "↓ " : "- "}
             {change}% from last month
           </Text>
         </View>
@@ -110,6 +115,10 @@ const styles = StyleSheet.create({
   },
   greenText: {
     color: "#22c55e",
+    fontSize: 16,
+  },
+  grayText: {
+    color: "gray",
     fontSize: 16,
   },
 });

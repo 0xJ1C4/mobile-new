@@ -47,20 +47,22 @@ export default function SummaryCards() {
   return (
     <View>
       {isLoading ? (
-        <>
+        <View>
           <MetricCardSkeleton />
           <MetricCardSkeleton />
           <MetricCardSkeleton />
-        </>
+        </View>
       ) : (
-        <>
+        <View>
           <View>
             <MetricCard
               type="sales"
               title="Monthly Sales"
               amount={`₱${sales?.currenMonthSales.toLocaleString()}`}
               change={
-                sales?.trends == "Infinity" || null
+                sales?.trends === "Infinity" ||
+                sales?.trends === "-Infinity" ||
+                sales?.trends === "NaN"
                   ? 0
                   : Number(sales?.trends) || 0
               }
@@ -73,7 +75,9 @@ export default function SummaryCards() {
               title="Monthly Expenses"
               amount={`₱${expense?.currenMonthExpense.toLocaleString()}`}
               change={
-                expense?.trends == "Infinity" || null
+                expense?.trends === "Infinity" ||
+                expense?.trends === "-Infinity" ||
+                expense?.trends === "NaN"
                   ? 0
                   : Number(expense?.trends) || 0
               }
@@ -86,13 +90,15 @@ export default function SummaryCards() {
               title="Monthly Income"
               amount={`₱${total?.total.toLocaleString()}`}
               change={
-                total?.trends == "Infinity" || null || "-Infinity"
+                total?.trends === "Infinity" ||
+                total?.trends === "-Infinity" ||
+                total?.trends === "NaN"
                   ? 0
                   : Number(total?.trends) || 0
               }
             />
           </View>
-        </>
+        </View>
       )}
     </View>
   );

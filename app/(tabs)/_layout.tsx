@@ -1,9 +1,30 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { House, BadgeRussianRuble, QrCodeIcon } from "lucide-react-native";
+import { useEffect } from "react";
+import { getUser } from "@/helper/session";
+import { useRouter } from "expo-router";
 
 export default function TabLayout() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const session = await getUser();
+
+        if (session) {
+          return null;
+        } else {
+          router.push("/");
+        }
+      } catch (error) {
+        router.push("/");
+      }
+    };
+    checkSession();
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
