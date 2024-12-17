@@ -2,7 +2,7 @@ import { NEXT_API_URL } from "@/constants/api"
 import { getSession } from "./session";
 
 
-
+//scan
 export const getReceiptContent =  async (image: string) => {
     const session = await getSession();
     const dataS = {
@@ -28,7 +28,7 @@ export const getReceiptContent =  async (image: string) => {
         console.log(error)    
     }
 }
-
+//save
 export const saveReceiptContent = async (receipt: unknown) => {
     const session = await getSession();
     try {
@@ -53,6 +53,24 @@ export const saveReceiptContent = async (receipt: unknown) => {
     }
 }
 
+export const uploadImageReceipt = async (image: File) => {
+    const session = await getSession();
+    try {
+        const uploadImageRequest = await fetch(`${NEXT_API_URL}/api/receipt/upload`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${session}`
+            },
+            body: image
+        })
+
+        return uploadImageRequest
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+//update
 export const patchReceiptContent = async (receipt: unknown) => {
     const session = await getSession();
     try {
@@ -73,6 +91,7 @@ export const patchReceiptContent = async (receipt: unknown) => {
     }
 }
 
+//get receipt using ID
 export const getReceiptContentById = async (id: string) => {
     const session = await getSession();
     try {
@@ -91,3 +110,9 @@ export const getReceiptContentById = async (id: string) => {
         console.log(error)
     }
 }
+
+export async function uriToBlob(uri: string) {
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    return blob;
+  }

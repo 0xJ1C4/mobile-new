@@ -18,6 +18,7 @@ import { SelectList } from "react-native-dropdown-select-list";
 import { patchReceiptContent, getReceiptContentById } from "@/helper/receipt";
 import { ReceiptData } from "@/constants/types";
 import TransactionFormLoading from "@/components/skeleton/TransactionFormSkeleton";
+import { getExpenseCategories, getSaleCategories } from "@/helper/categories";
 
 const validationSchema = Yup.object().shape({
   receipt_number: Yup.string().required("Receipt number is required"),
@@ -44,6 +45,12 @@ const calculateTotal = (items: any) => {
     .toFixed(2);
 };
 
+type Category = {
+  id: number;
+  name: string;
+  description: string;
+};
+
 export default function ReceiptTransactionFormTest() {
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -61,8 +68,23 @@ export default function ReceiptTransactionFormTest() {
 
   const initialDate = typeof date === "string" ? new Date(date) : undefined;
 
+  //receipt category
+  const [expenseCategory, setExpenseCategory] = useState<Category[]>();
+  const [salesCategory, setSalesCategory] = useState<Category[]>();
+  useEffect(() => {
+    const getCategories = async () => {
+      const expenseCategoryRequest = await getExpenseCategories();
+      const salesCategoryRequest = await getSaleCategories();
+
+      setExpenseCategory(await expenseCategoryRequest);
+      setSalesCategory(await salesCategoryRequest);
+    };
+
+    getCategories();
+  }, []);
+
   //Select List
-  const [selected, setSelected] = useState("");
+  const [selected, setSelected] = useState(receipt_type as string);
   const selectData = [
     { key: "Sales", value: "Sales" },
     { key: "Expense", value: "Expense" },
@@ -82,6 +104,8 @@ export default function ReceiptTransactionFormTest() {
       receipt_type: selected,
       items: body.items,
       total: Number(body.total),
+      expense_category: selected === "Expense" ? body.expense_category : null,
+      sales_category: selected === "Sales" ? body.sales_category : null,
     };
 
     const req = await patchReceiptContent(data);
@@ -131,6 +155,8 @@ export default function ReceiptTransactionFormTest() {
           total: receiptData?.total,
           date: initialDate,
           items: receiptData?.items || [],
+          receipt_type: receiptData?.receipt_type || "",
+          receipt_category: receiptData?.receipt_category || "",
         }}
         validationSchema={validationSchema}
         onSubmit={handleSubmitForm}
@@ -165,16 +191,60 @@ export default function ReceiptTransactionFormTest() {
                 <Text style={styles.errorText}>{errors.receipt_number}</Text>
               )}
 
-              <SelectList
-                setSelected={(val: SetStateAction<string>) => {
-                  setSelected(val);
-                  setFieldValue("receipt_type", val);
-                }}
-                data={selectData}
-                save="value"
-                defaultOption={{ key: receipt_type, value: receipt_type }}
-                placeholder="Categories"
-              />
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Receipt Type</Text>
+                <SelectList
+                  setSelected={(val: SetStateAction<string>) => {
+                    setSelected(val as string);
+                    setFieldValue("receipt_type", val);
+                    setFieldValue("receipt_category", "");
+                  }}
+                  data={selectData}
+                  save="value"
+                  defaultOption={{ key: receipt_type, value: receipt_type }}
+                  placeholder="Select Receipt Type"
+                />
+              </View>
+              {touched.receipt_type && errors.receipt_type && (
+                <Text style={styles.errorText}>{errors.receipt_type}</Text>
+              )}
+
+              {(selected === "Expense" || selected === "Sales") && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Receipt Category</Text>
+                  <SelectList
+                    setSelected={(val: string) => {
+                      setFieldValue(
+                        selected == "Expense"
+                          ? "expense_category"
+                          : "sales_category",
+                        Number(val)
+                      );
+                    }}
+                    data={
+                      selected === "Expense"
+                        ? expenseCategory?.map((item) => ({
+                            key: item.id.toString(),
+                            value: item.name,
+                          })) || []
+                        : salesCategory?.map((item) => ({
+                            key: item.id.toString(),
+                            value: item.name,
+                          })) || []
+                    }
+                    save="key"
+                    defaultOption={
+                      values.receipt_category
+                        ? {
+                            key: values.receipt_category,
+                            value: values.receipt_category,
+                          }
+                        : undefined
+                    }
+                    placeholder="Select Receipt Category"
+                  />
+                </View>
+              )}
 
               <TextInput
                 label="Delivered By"
@@ -204,6 +274,8 @@ export default function ReceiptTransactionFormTest() {
 
               <TextInput
                 label="Address"
+                multiline
+                numberOfLines={4}
                 onChangeText={handleChange("address")}
                 onBlur={handleBlur("address")}
                 value={values.address}
@@ -367,5 +439,13 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     alignSelf: "flex-end",
+  },
+  inputContainer: {
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 4,
+    color: theme.colors.onSurface,
   },
 });

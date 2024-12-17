@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "react-native-paper";
 import SummaryCards from "@/components/features/SummaryCard";
 import { ScrollView } from "react-native";
 import { useCallback, useState, useEffect } from "react";

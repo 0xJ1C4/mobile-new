@@ -15,8 +15,15 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { SelectList } from "react-native-dropdown-select-list";
 import { useRouter } from "expo-router";
 import { useReceipt } from "@/provider/ReceiptProvider";
-import { saveReceiptContent } from "@/helper/receipt";
+import { saveReceiptContent, uploadImageReceipt } from "@/helper/receipt";
 import LoadingIndicator from "../ui/LoadingIndicator";
+import { getExpenseCategories, getSaleCategories } from "@/helper/categories";
+
+type Category = {
+  id: number;
+  name: string;
+  description: string;
+};
 
 export default function EditReceipt() {
   const router = useRouter();
@@ -30,6 +37,10 @@ export default function EditReceipt() {
 
   const [items, setItems] = useState(receiptData?.items || []);
   const [total, setTotal] = useState(receiptData?.total || "0");
+
+  //get categories
+  const [expenseCategory, setExpenseCategory] = useState<Category[]>();
+  const [salesCategory, setSalesCategory] = useState<Category[]>();
 
   const data = [
     { key: "1", value: "Sales" },
@@ -45,6 +56,18 @@ export default function EditReceipt() {
     }, 0);
     setTotal(updatedTotal.toLocaleString());
   }, [items]);
+
+  useEffect(() => {
+    const getCategories = async () => {
+      const expenseCategoryRequest = await getExpenseCategories();
+      const salesCategoryRequest = await getSaleCategories();
+
+      setExpenseCategory(await expenseCategoryRequest);
+      setSalesCategory(await salesCategoryRequest);
+    };
+
+    getCategories();
+  }, []);
 
   const handleInputChange = (field: string, value: string | Date | any) => {
     if (setReceiptData && receiptData) {
@@ -155,6 +178,7 @@ export default function EditReceipt() {
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Address</Text>
                 <TextInput
+                  multiline
                   style={styles.input}
                   value={receiptData.address}
                   onChangeText={(text) => handleInputChange("address", text)}
@@ -168,15 +192,54 @@ export default function EditReceipt() {
                   setSelected={(val: string) => {
                     setSelectedType(val);
                     handleInputChange("receipt_type", val);
+                    // Clear the receipt_category when changing receipt_type
+                    handleInputChange("receipt_category", "");
                   }}
                   data={data}
                   save="value"
                   defaultOption={{
-                    key: receiptData.receipt_type,
-                    value: selectedType,
+                    key: receiptData.receipt_type || "",
+                    value: receiptData.receipt_type || "",
                   }}
                 />
               </View>
+
+              {/* Receipt Category */}
+              {(selectedType === "Expense" || selectedType === "Sales") && (
+                <View style={styles.inputContainer}>
+                  <Text style={styles.label}>Receipt Category</Text>
+                  <SelectList
+                    setSelected={(val: string) => {
+                      handleInputChange(
+                        selectedType == "Expense"
+                          ? "expense_category"
+                          : "sales_category",
+                        val
+                      );
+                    }}
+                    data={
+                      selectedType === "Expense"
+                        ? expenseCategory?.map((item) => ({
+                            key: item.id.toString(),
+                            value: item.name,
+                          })) || []
+                        : salesCategory?.map((item) => ({
+                            key: item.id.toString(),
+                            value: item.name,
+                          })) || []
+                    }
+                    save="key"
+                    defaultOption={
+                      receiptData.receipt_category
+                        ? {
+                            key: receiptData.receipt_category,
+                            value: receiptData.receipt_category,
+                          }
+                        : undefined
+                    }
+                  />
+                </View>
+              )}
             </View>
 
             {/* Items Table */}
@@ -248,24 +311,34 @@ export default function EditReceipt() {
               style={styles.saveButton}
               onPress={async () => {
                 try {
-                  console.log(receiptData.date);
-                  const transformedData = {
-                    ...receiptData,
-                    items: receiptData.items.map((item: any) => ({
-                      ...item,
-                      unit_price: Number(item.unit_price),
-                      amount: Number(item.amount),
-                    })),
-                    total: Number(receiptData.total),
-                    receipt_type: selectedType,
-                    date: new Date(receiptData.date)
-                      .toISOString()
-                      .split("T")[0],
-                  };
-                  setIsLoading(true);
-                  await saveReceiptContent(transformedData);
-                  setIsLoading(false);
-                  router.dismiss();
+                  const uploadImage = await uploadImageReceipt(
+                    receiptData.imageFile
+                  );
+
+                  if (uploadImage?.ok) {
+                    const uploadedImage = await uploadImage.json();
+                    const uuid = uploadedImage?.id;
+
+                    const transformedData = {
+                      ...receiptData,
+                      image: "",
+                      items: receiptData.items.map((item: any) => ({
+                        ...item,
+                        unit_price: Number(item.unit_price),
+                        amount: Number(item.amount),
+                      })),
+                      total: Number(receiptData.total),
+                      receipt_type: selectedType,
+                      date: new Date(receiptData.date)
+                        .toISOString()
+                        .split("T")[0],
+                      image_uuid: uuid,
+                    };
+                    setIsLoading(true);
+                    await saveReceiptContent(transformedData);
+                    setIsLoading(false);
+                    router.dismiss();
+                  }
                 } catch (error) {
                   Alert.alert("An Error occured");
                 }
