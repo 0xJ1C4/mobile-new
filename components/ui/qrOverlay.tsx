@@ -6,10 +6,19 @@ import {
   Line,
   vec,
 } from "@shopify/react-native-skia";
-import { Dimensions, Platform, StyleSheet, View, Text } from "react-native";
+import {
+  Dimensions,
+  Platform,
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+} from "react-native";
+
+import { useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
-
+const router = useRouter();
 const innerDimension = 250;
 const cornerSize = 30;
 
@@ -24,6 +33,10 @@ const inner = rrect(
   5,
   5
 );
+
+const handleLoginFormNavigation = () => {
+  router.replace("/LogForm");
+};
 
 export const Overlay = () => {
   return (
@@ -110,6 +123,18 @@ export const Overlay = () => {
         <Text style={styles.instructionText}>
           Position the QR code within the frame to scan
         </Text>
+
+        <View style={styles.loginFormContainer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.loginFormButton,
+              pressed && styles.loginFormButtonPressed,
+            ]}
+            onPress={handleLoginFormNavigation}
+          >
+            <Text style={styles.loginFormButtonText}>Log In using Form</Text>
+          </Pressable>
+        </View>
       </View>
     </>
   );
@@ -141,6 +166,31 @@ const styles = StyleSheet.create({
     color: "white",
     textAlign: "center",
     paddingHorizontal: 40,
+  },
+
+  loginFormContainer: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  loginFormText: {
+    color: "white",
+    fontSize: 16,
+  },
+  loginFormButton: {
+    backgroundColor: "#2196F3",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 4,
+  },
+  loginFormButtonPressed: {
+    backgroundColor: "#1976D2",
+  },
+  loginFormButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
 });
 
