@@ -4,6 +4,8 @@ import { House, BadgeRussianRuble, QrCodeIcon } from "lucide-react-native";
 import { useEffect } from "react";
 import { getUser } from "@/helper/session";
 import { useRouter } from "expo-router";
+import { Button } from "react-native-paper";
+import { StyleSheet } from "react-native";
 
 export default function TabLayout() {
   const router = useRouter();

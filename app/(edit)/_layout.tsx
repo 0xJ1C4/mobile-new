@@ -8,6 +8,10 @@ export default function Main() {
         name="edit-transaction"
         options={{ title: "Home", headerShown: false }}
       />
+      <Stack.Screen
+        name="add-transaction"
+        options={{ title: "Home", headerShown: false }}
+      />
     </Stack>
   );
 }

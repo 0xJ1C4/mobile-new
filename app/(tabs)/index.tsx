@@ -67,6 +67,7 @@ export default function HomeScreen() {
           <View>
             <Chart />
           </View>
+
           <View style={{ padding: 5 }}>
             <Text variant="labelLarge">
               Recent Transactions ( With Receipt )

@@ -2,7 +2,7 @@
   "expo": {
     "name": "LA PAGANA Mobile",
     "slug": "lapaganamobile",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "lapagana",

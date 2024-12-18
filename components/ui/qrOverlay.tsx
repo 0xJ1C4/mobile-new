@@ -8,6 +8,7 @@ import {
 } from "@shopify/react-native-skia";
 import { Dimensions, StyleSheet, View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import React from "react";
 
 const { width, height } = Dimensions.get("window");
 const innerDimension = 250;
