@@ -6,6 +6,10 @@ import {
   Pressable,
   Animated,
   TouchableWithoutFeedback,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { TextInput, HelperText, Title } from "react-native-paper";
 import { useRouter } from "expo-router";
@@ -38,6 +42,8 @@ export default function LoginForm() {
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [animation] = useState(new Animated.Value(1));
   const [loading, setLoading] = useState(false);
+
+  const Logo = require("../assets/images/logo.png");
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
@@ -101,8 +107,18 @@ export default function LoginForm() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.formContainer}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "android" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "android" ? 0 : 20}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.logoContainer}>
+          <Image source={Logo} style={styles.lapaganaLogo} />
+        </View>
+
         <Title style={styles.title}>Log In</Title>
 
         <TextInput
@@ -157,8 +173,8 @@ export default function LoginForm() {
             <Text style={styles.buttonText}>Log In</Text>
           </Animated.View>
         </TouchableWithoutFeedback>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -168,7 +184,23 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
 
+  scrollViewContent: {
+    flexGrow: 1,
+    padding: 10,
+    justifyContent: "center",
+  },
+  logoContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  lapaganaLogo: {
+    width: 200,
+    height: 250,
+  },
+
   title: {
+    fontWeight: "bold",
     fontSize: 24,
     marginBottom: 20,
     textAlign: "center",
