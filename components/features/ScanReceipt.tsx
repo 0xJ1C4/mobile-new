@@ -311,6 +311,7 @@ export default function EditReceipt() {
               style={styles.saveButton}
               onPress={async () => {
                 try {
+                  setIsLoading(true);
                   const uploadImage = await uploadImageReceipt(
                     receiptData.imageFile
                   );
@@ -334,7 +335,6 @@ export default function EditReceipt() {
                         .split("T")[0],
                       image_uuid: uuid,
                     };
-                    setIsLoading(true);
                     await saveReceiptContent(transformedData);
                     setIsLoading(false);
                     router.dismiss();

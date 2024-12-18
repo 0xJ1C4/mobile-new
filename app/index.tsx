@@ -121,6 +121,7 @@ export default function LoginScreen() {
         <View style={styles.buttonContainer}></View>
       </CameraView>
       <Overlay />
+      
     </View>
   );
 }
